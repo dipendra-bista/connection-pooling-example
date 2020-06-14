@@ -3,10 +3,12 @@ package com.punojsoft.connectionpool.dbcpexample;
 import com.punojsoft.connectionpool.dbcpexample.model.Employee;
 import com.punojsoft.connectionpool.dbcpexample.repository.EmployeeRepository;
 import com.punojsoft.connectionpool.dbcpexample.utils.DBUtils;
+import com.punojsoft.connectionpool.dbcpexample.utils.HikariUtils;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -15,7 +17,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 @SpringBootApplication
-public class DbcpexampleApplication implements ApplicationRunner {
+public class DbcpexampleApplication implements ApplicationRunner, CommandLineRunner {
     @Autowired
     private EmployeeRepository employeeRepository;
 
@@ -23,6 +25,12 @@ public class DbcpexampleApplication implements ApplicationRunner {
         SpringApplication.run(DbcpexampleApplication.class, args);
     }
 
+    /**
+     * DBCP connection Pooling
+     *
+     * @param args
+     * @throws Exception
+     */
     @Override
     public void run(ApplicationArguments args) throws Exception {
         employeeRepository.save(Employee.builder()
@@ -42,5 +50,18 @@ public class DbcpexampleApplication implements ApplicationRunner {
             }
         }
 
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        System.out.println("from Hikari cp :");
+        try (Connection connection = HikariUtils.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement("select *from Employee ");) {
+            try (ResultSet resultSet = preparedStatement.executeQuery();) {
+                while (resultSet.next()) {
+                    System.out.println(resultSet.getString(1) + "," + resultSet.getString(2));
+                }
+            }
+        }
     }
 }
